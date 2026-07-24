@@ -74,28 +74,57 @@ const FORECAST_URL = "https://api.open-meteo.com/v1/forecast";
 /* Mapping helpers                                                     */
 /* ------------------------------------------------------------------ */
 
-/**
- * Map a WMO weather-interpretation code to the limited icon set we exported
- * from Figma plus a human-readable label. Ranges collapse to the closest
- * available icon (e.g. snow reuses the rain icon).
- */
-function describeWeather(code: number): {
+interface WeatherDescription {
   condition: WeatherCondition;
   label: string;
-} {
-  if (code <= 1) {
-    return { condition: "cloud-sun", label: code === 0 ? "Clear sky" : "Mainly clear" };
-  }
-  if (code === 2) return { condition: "cloud-sun", label: "Partly cloudy" };
-  if (code === 3) return { condition: "cloud-sun", label: "Overcast" };
-  if (code === 45 || code === 48) return { condition: "cloud-sun", label: "Fog" };
-  if (code >= 51 && code <= 57) return { condition: "drizzle-sun", label: "Drizzle" };
-  if (code >= 61 && code <= 67) return { condition: "drizzle-alt", label: "Rain" };
-  if (code >= 71 && code <= 77) return { condition: "drizzle-alt", label: "Snow" };
-  if (code >= 80 && code <= 82) return { condition: "drizzle-alt", label: "Rain showers" };
-  if (code >= 85 && code <= 86) return { condition: "drizzle-alt", label: "Snow showers" };
-  if (code >= 95) return { condition: "lightning", label: "Thunderstorm" };
-  return { condition: "cloud-sun", label: "Unknown conditions" };
+}
+
+/**
+ * Full WMO weather-interpretation code table. Each code maps to the closest
+ * icon in our exported set (we only have four) plus a human-readable label.
+ * To support a new code, add a row here — no control flow to touch.
+ * Reference: https://open-meteo.com/en/docs (WMO Weather interpretation codes)
+ */
+const WMO_WEATHER: Record<number, WeatherDescription> = {
+  0: { condition: "cloud-sun", label: "Clear sky" },
+  1: { condition: "cloud-sun", label: "Mainly clear" },
+  2: { condition: "cloud-sun", label: "Partly cloudy" },
+  3: { condition: "cloud-sun", label: "Overcast" },
+  45: { condition: "cloud-sun", label: "Fog" },
+  48: { condition: "cloud-sun", label: "Rime fog" },
+  51: { condition: "drizzle-sun", label: "Light drizzle" },
+  53: { condition: "drizzle-sun", label: "Drizzle" },
+  55: { condition: "drizzle-sun", label: "Dense drizzle" },
+  56: { condition: "drizzle-sun", label: "Freezing drizzle" },
+  57: { condition: "drizzle-sun", label: "Freezing drizzle" },
+  61: { condition: "drizzle-alt", label: "Light rain" },
+  63: { condition: "drizzle-alt", label: "Rain" },
+  65: { condition: "drizzle-alt", label: "Heavy rain" },
+  66: { condition: "drizzle-alt", label: "Freezing rain" },
+  67: { condition: "drizzle-alt", label: "Heavy freezing rain" },
+  71: { condition: "drizzle-alt", label: "Light snow" },
+  73: { condition: "drizzle-alt", label: "Snow" },
+  75: { condition: "drizzle-alt", label: "Heavy snow" },
+  77: { condition: "drizzle-alt", label: "Snow grains" },
+  80: { condition: "drizzle-alt", label: "Light rain showers" },
+  81: { condition: "drizzle-alt", label: "Rain showers" },
+  82: { condition: "drizzle-alt", label: "Violent rain showers" },
+  85: { condition: "drizzle-alt", label: "Light snow showers" },
+  86: { condition: "drizzle-alt", label: "Snow showers" },
+  95: { condition: "lightning", label: "Thunderstorm" },
+  96: { condition: "lightning", label: "Thunderstorm with hail" },
+  99: { condition: "lightning", label: "Thunderstorm with heavy hail" },
+};
+
+/** Fallback for any code Open-Meteo adds that we don't map yet. */
+const UNKNOWN_WEATHER: WeatherDescription = {
+  condition: "cloud-sun",
+  label: "Unknown conditions",
+};
+
+/** Look up a WMO code, falling back gracefully for unmapped values. */
+function describeWeather(code: number): WeatherDescription {
+  return WMO_WEATHER[code] ?? UNKNOWN_WEATHER;
 }
 
 const WEEKDAY_FORMAT = new Intl.DateTimeFormat("en-US", {
