@@ -295,15 +295,26 @@ export async function getWeather(city: string): Promise<WeatherResult> {
 }
 
 /**
- * Resolve raw coordinates (from the browser Geolocation API) to live weather.
- * Because coordinates are always valid, this never returns "not-found"; only
- * the forecast fetch can throw. The "City, ST" label comes from reverse
- * geocoding, falling back to the forecast's time zone if that lookup fails.
+ * Resolve raw coordinates (from the browser Geolocation API or a search
+ * selection) to live weather. Because coordinates are always valid, this never
+ * returns "not-found"; only the forecast fetch can throw. When a `label` is
+ * supplied (search selections already know the place name), it is used as-is;
+ * otherwise the "City, ST" label comes from reverse geocoding, falling back to
+ * the forecast's time zone if that lookup fails.
  */
 export async function getWeatherByCoords(
   latitude: number,
   longitude: number,
+  label?: { city: string; region: string },
 ): Promise<WeatherResult> {
+  if (label) {
+    const payload = await fetchForecast(latitude, longitude);
+    return {
+      status: "ok",
+      data: buildWeatherData(payload, label.city, label.region),
+    };
+  }
+
   const [payload, place] = await Promise.all([
     fetchForecast(latitude, longitude),
     reverseGeocode(latitude, longitude),

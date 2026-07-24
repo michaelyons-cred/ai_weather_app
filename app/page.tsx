@@ -1,6 +1,7 @@
 import Image from "next/image";
 import { WeatherCard } from "./weather-card";
 import { LocationButton } from "./location-button";
+import { SearchBox } from "./search-box";
 import { getWeather, getWeatherByCoords } from "./weather-data";
 
 const PAGE_SHELL =
@@ -41,6 +42,7 @@ function Header({ city, region, date }: { city: string; region: string; date: st
         </span>
       </div>
       <p className="text-sm">{date}</p>
+      <SearchBox />
     </header>
   );
 }
@@ -54,12 +56,13 @@ export default async function Home({
 }: {
   searchParams: Promise<{
     city?: string;
+    region?: string;
     lat?: string;
     lon?: string;
     notice?: string;
   }>;
 }) {
-  const { city = "Dallas", lat, lon, notice } = await searchParams;
+  const { city, region, lat, lon, notice } = await searchParams;
 
   const latitude = Number(lat);
   const longitude = Number(lon);
@@ -72,9 +75,16 @@ export default async function Home({
       ? (LOCATION_NOTICES[notice] ?? LOCATION_NOTICES.unavailable)
       : null;
 
+  // A search selection carries exact coordinates plus its own label, so we can
+  // skip reverse geocoding and show precisely what the user picked. The GPS
+  // button sends coordinates only, so that path still reverse-geocodes.
   const result = hasCoords
-    ? await getWeatherByCoords(latitude, longitude)
-    : await getWeather(city);
+    ? await getWeatherByCoords(
+        latitude,
+        longitude,
+        city ? { city, region: region ?? "" } : undefined,
+      )
+    : await getWeather(city ?? "Dallas");
 
   if (result.status === "not-found") {
     return (
@@ -87,6 +97,9 @@ export default async function Home({
             <p className="text-forecast-text/70 mt-2 text-sm">
               Check the spelling or try a nearby city.
             </p>
+          </div>
+          <div className="mt-4 flex justify-center">
+            <SearchBox />
           </div>
           <LocationButton />
         </div>
