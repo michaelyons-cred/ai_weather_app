@@ -80,7 +80,7 @@ export function LocationButton() {
       aria-busy={busy}
       aria-label={busy ? "Locating\u2026" : "Use my location"}
       title="Use my location"
-      className="focus-visible:ring-offset-sky-accent flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-sm transition hover:bg-white/25 focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60"
+      className="focus-visible:ring-offset-sky-accent flex h-[46px] w-[46px] shrink-0 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-sm transition hover:bg-white/25 focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60"
     >
       {busy ? (
         <svg

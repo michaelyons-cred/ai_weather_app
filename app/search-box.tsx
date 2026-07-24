@@ -226,7 +226,7 @@ export function SearchBox() {
           }}
           onFocus={() => setOpen(true)}
           onKeyDown={onKeyDown}
-          className="focus:border-white/50 w-full rounded-full border border-white/25 bg-white/15 py-2 pr-3 pl-9 text-sm text-white backdrop-blur-sm transition placeholder:text-white/60 focus:bg-white/25 focus:outline-none"
+          className="focus:border-white/50 w-full rounded-full border border-white/25 bg-white/15 py-3 pr-4 pl-10 text-sm text-white backdrop-blur-sm transition placeholder:text-white/60 focus:bg-white/25 focus:outline-none"
         />
       </div>
 
@@ -234,14 +234,14 @@ export function SearchBox() {
         <ul
           id={listboxId}
           role="listbox"
-          className="absolute inset-x-0 top-full z-10 mt-1.5 overflow-hidden rounded-[6px] bg-white text-left shadow-[0_4px_20px_rgba(0,0,0,0.25)]"
+          className="absolute inset-x-0 top-full z-50 mt-2 overflow-hidden rounded-[6px] bg-white text-left shadow-[0_4px_20px_rgba(0,0,0,0.25)]"
         >
           {loading ? (
-            <li className="text-forecast-text/60 px-3 py-2.5 text-sm">
+            <li className="text-forecast-text/60 px-4 py-3 text-sm">
               {"Searching\u2026"}
             </li>
           ) : error ? (
-            <li className="text-forecast-text/70 px-3 py-2.5 text-sm">{error}</li>
+            <li className="text-forecast-text/70 px-4 py-3 text-sm">{error}</li>
           ) : (
             suggestions.map((suggestion, index) => {
               const secondary = [suggestion.admin1, suggestion.country]
@@ -258,7 +258,7 @@ export function SearchBox() {
                     type="button"
                     onMouseEnter={() => setActiveIndex(index)}
                     onClick={() => selectSuggestion(suggestion)}
-                    className={`flex w-full items-baseline justify-between gap-2 px-3 py-2.5 text-left transition ${
+                    className={`flex w-full items-baseline justify-between gap-2 px-4 py-3 text-left transition ${
                       index === activeIndex ? "bg-sky-accent/15" : ""
                     }`}
                   >
