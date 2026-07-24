@@ -4,12 +4,15 @@ import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 
 /**
- * Lets the user swap the hardcoded default city for weather at their real
- * location. The browser Geolocation API is asynchronous and fallible, so the
- * three failure modes each get a friendly message:
- *   - the device/browser has no geolocation support
- *   - the user denies the permission prompt
- *   - the lookup times out or the position is unavailable
+ * Lets the user swap the default city for weather at their real location.
+ *
+ * `navigator.geolocation` is a browser-only API, so it is called exclusively
+ * from the click handler below (never during render / SSR). The lookup is
+ * asynchronous and fallible; every outcome is handled distinctly:
+ *   - no geolocation support           -> "unsupported"
+ *   - PERMISSION_DENIED                 -> "denied"
+ *   - POSITION_UNAVAILABLE              -> "unavailable"
+ *   - TIMEOUT                           -> "timeout"
  *
  * On success we hand the coordinates to the server by navigating to
  * `/?lat=…&lon=…`; the page's Server Component fetches by coordinates from
@@ -51,12 +54,18 @@ export function LocationButton() {
         });
       },
       (geoError) => {
-        if (geoError.code === geoError.PERMISSION_DENIED) {
-          showFallback("denied");
-        } else if (geoError.code === geoError.TIMEOUT) {
-          showFallback("timeout");
-        } else {
-          showFallback("unavailable");
+        switch (geoError.code) {
+          case geoError.PERMISSION_DENIED:
+            showFallback("denied");
+            break;
+          case geoError.POSITION_UNAVAILABLE:
+            showFallback("unavailable");
+            break;
+          case geoError.TIMEOUT:
+            showFallback("timeout");
+            break;
+          default:
+            showFallback("unavailable");
         }
       },
       { timeout: 10000, maximumAge: 300000 },
