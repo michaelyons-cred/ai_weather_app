@@ -175,8 +175,19 @@ function ForecastDay({
 }
 
 function Forecast({ days, unit }: { days: DayForecast[]; unit: Unit }) {
+  if (days.length === 0) {
+    return (
+      <p className="text-forecast-text/70 bg-white py-5 text-center text-sm">
+        Forecast unavailable.
+      </p>
+    );
+  }
+
   return (
-    <div className="grid grid-cols-5 bg-white">
+    <div
+      className="grid bg-white"
+      style={{ gridTemplateColumns: `repeat(${days.length}, minmax(0, 1fr))` }}
+    >
       {days.map((day, index) => (
         <ForecastDay
           key={day.id}
