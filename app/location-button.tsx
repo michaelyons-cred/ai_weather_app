@@ -19,15 +19,25 @@ export function LocationButton() {
   const router = useRouter();
   const [isNavigating, startTransition] = useTransition();
   const [locating, setLocating] = useState(false);
-  const [error, setError] = useState<string | null>(null);
 
   const busy = locating || isNavigating;
 
-  function handleClick() {
-    setError(null);
+  // On any failure we hand off to the server with `?notice=<reason>`, which
+  // falls back to the default city and shows an explanatory banner. This keeps
+  // one source of truth for the message and guarantees the user ends up seeing
+  // Dallas rather than a stale or empty state.
+  function showFallback(
+    reason: "denied" | "timeout" | "unsupported" | "unavailable",
+  ) {
+    setLocating(false);
+    startTransition(() => {
+      router.push(`/?notice=${reason}`);
+    });
+  }
 
+  function handleClick() {
     if (!("geolocation" in navigator)) {
-      setError("Your browser doesn't support location.");
+      showFallback("unsupported");
       return;
     }
 
@@ -41,16 +51,12 @@ export function LocationButton() {
         });
       },
       (geoError) => {
-        setLocating(false);
-        switch (geoError.code) {
-          case geoError.PERMISSION_DENIED:
-            setError("Location access was denied.");
-            break;
-          case geoError.TIMEOUT:
-            setError("Timed out finding your location.");
-            break;
-          default:
-            setError("Couldn't determine your location.");
+        if (geoError.code === geoError.PERMISSION_DENIED) {
+          showFallback("denied");
+        } else if (geoError.code === geoError.TIMEOUT) {
+          showFallback("timeout");
+        } else {
+          showFallback("unavailable");
         }
       },
       { timeout: 10000, maximumAge: 300000 },
@@ -58,33 +64,43 @@ export function LocationButton() {
   }
 
   return (
-    <div className="mt-3 flex flex-col items-center gap-1.5">
+    <div className="mt-3 flex justify-center">
       <button
         type="button"
         onClick={handleClick}
         disabled={busy}
+        aria-busy={busy}
         className="focus-visible:ring-offset-sky-accent inline-flex items-center gap-1.5 rounded-full bg-white/15 px-4 py-1.5 text-sm font-medium text-white backdrop-blur-sm transition hover:bg-white/25 focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60"
       >
-        <svg
-          aria-hidden
-          viewBox="0 0 24 24"
-          className="h-4 w-4"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={2}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        >
-          <circle cx="12" cy="12" r="3" />
-          <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
-        </svg>
+        {busy ? (
+          <svg
+            aria-hidden
+            viewBox="0 0 24 24"
+            className="h-4 w-4 animate-spin"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+          >
+            <circle cx="12" cy="12" r="9" className="opacity-25" />
+            <path d="M21 12a9 9 0 0 0-9-9" strokeLinecap="round" />
+          </svg>
+        ) : (
+          <svg
+            aria-hidden
+            viewBox="0 0 24 24"
+            className="h-4 w-4"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <circle cx="12" cy="12" r="3" />
+            <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
+          </svg>
+        )}
         {busy ? "Locating\u2026" : "Use my location"}
       </button>
-      {error ? (
-        <p role="status" className="text-sm text-white/90">
-          {error}
-        </p>
-      ) : null}
     </div>
   );
 }
