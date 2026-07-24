@@ -42,7 +42,10 @@ function Header({ city, region, date }: { city: string; region: string; date: st
         </span>
       </div>
       <p className="text-sm">{date}</p>
-      <SearchBox />
+      <div className="mt-3 flex items-start justify-center gap-2">
+        <SearchBox />
+        <LocationButton />
+      </div>
     </header>
   );
 }
@@ -98,10 +101,10 @@ export default async function Home({
               Check the spelling or try a nearby city.
             </p>
           </div>
-          <div className="mt-4 flex justify-center">
+          <div className="mt-4 flex items-start justify-center gap-2">
             <SearchBox />
+            <LocationButton />
           </div>
-          <LocationButton />
         </div>
       </main>
     );
@@ -122,7 +125,6 @@ export default async function Home({
         ) : null}
         <Header city={current.city} region={current.region} date={current.date} />
         <WeatherCard current={current} forecast={forecast} />
-        <LocationButton />
       </div>
     </main>
   );

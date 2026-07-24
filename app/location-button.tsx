@@ -73,43 +73,42 @@ export function LocationButton() {
   }
 
   return (
-    <div className="mt-3 flex justify-center">
-      <button
-        type="button"
-        onClick={handleClick}
-        disabled={busy}
-        aria-busy={busy}
-        className="focus-visible:ring-offset-sky-accent inline-flex items-center gap-1.5 rounded-full bg-white/15 px-4 py-1.5 text-sm font-medium text-white backdrop-blur-sm transition hover:bg-white/25 focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60"
-      >
-        {busy ? (
-          <svg
-            aria-hidden
-            viewBox="0 0 24 24"
-            className="h-4 w-4 animate-spin"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2}
-          >
-            <circle cx="12" cy="12" r="9" className="opacity-25" />
-            <path d="M21 12a9 9 0 0 0-9-9" strokeLinecap="round" />
-          </svg>
-        ) : (
-          <svg
-            aria-hidden
-            viewBox="0 0 24 24"
-            className="h-4 w-4"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth={2}
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <circle cx="12" cy="12" r="3" />
-            <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
-          </svg>
-        )}
-        {busy ? "Locating\u2026" : "Use my location"}
-      </button>
-    </div>
+    <button
+      type="button"
+      onClick={handleClick}
+      disabled={busy}
+      aria-busy={busy}
+      aria-label={busy ? "Locating\u2026" : "Use my location"}
+      title="Use my location"
+      className="focus-visible:ring-offset-sky-accent flex h-[38px] w-[38px] shrink-0 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur-sm transition hover:bg-white/25 focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-60"
+    >
+      {busy ? (
+        <svg
+          aria-hidden
+          viewBox="0 0 24 24"
+          className="h-4 w-4 animate-spin"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+        >
+          <circle cx="12" cy="12" r="9" className="opacity-25" />
+          <path d="M21 12a9 9 0 0 0-9-9" strokeLinecap="round" />
+        </svg>
+      ) : (
+        <svg
+          aria-hidden
+          viewBox="0 0 24 24"
+          className="h-4 w-4"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={2}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <circle cx="12" cy="12" r="3" />
+          <path d="M12 2v3M12 19v3M2 12h3M19 12h3" />
+        </svg>
+      )}
+    </button>
   );
 }

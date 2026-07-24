@@ -177,7 +177,7 @@ export function SearchBox() {
   const showDropdown = open && query.trim().length >= MIN_QUERY_LENGTH;
 
   return (
-    <div ref={containerRef} className="relative mt-3 w-full max-w-[280px]">
+    <div ref={containerRef} className="relative w-full max-w-[280px]">
       <div className="relative">
         <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-white/70">
           {loading || isNavigating ? (
