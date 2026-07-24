@@ -65,6 +65,8 @@ interface DailyForecast {
 interface ForecastResponse {
   current: CurrentConditions;
   daily: DailyForecast;
+  /** IANA time-zone id (e.g. "America/Chicago") returned when timezone=auto. */
+  timezone: string;
 }
 
 const GEOCODING_URL = "https://geocoding-api.open-meteo.com/v1/search";
@@ -141,9 +143,73 @@ function formatToday(): string {
   }).format(new Date());
 }
 
+/**
+ * Derive a human-readable city name from an IANA time-zone id.
+ * Open-Meteo's geocoding endpoint is forward-only (name -> coordinates), so
+ * for a coordinates-first lookup we fall back to the time zone the forecast
+ * API reports, e.g. "America/Chicago" -> "Chicago". This is approximate: it
+ * names the zone's anchor city, which is usually the nearest large city.
+ */
+function cityFromTimezone(timezone: string): string {
+  const segment = timezone.split("/").at(-1) ?? timezone;
+  return segment.replace(/_/g, " ");
+}
+
 /* ------------------------------------------------------------------ */
 /* Data fetching (runs on the server)                                  */
 /* ------------------------------------------------------------------ */
+
+/** Fetch current conditions + a 5-day forecast for a coordinate pair. */
+async function fetchForecast(
+  latitude: number,
+  longitude: number,
+): Promise<ForecastResponse> {
+  const params = new URLSearchParams({
+    latitude: String(latitude),
+    longitude: String(longitude),
+    current: "temperature_2m,weather_code,wind_speed_10m",
+    daily: "weather_code,temperature_2m_max",
+    temperature_unit: "fahrenheit",
+    wind_speed_unit: "mph",
+    timezone: "auto",
+    forecast_days: "5",
+  });
+  const res = await fetch(`${FORECAST_URL}?${params.toString()}`, {
+    next: { revalidate: 900 },
+  });
+  if (!res.ok) {
+    throw new Error(`Forecast request failed (${res.status})`);
+  }
+  return res.json();
+}
+
+/** Shape a raw forecast payload into the app's canonical WeatherData. */
+function buildWeatherData(
+  payload: ForecastResponse,
+  city: string,
+  region: string,
+): WeatherData {
+  const currentDescription = describeWeather(payload.current.weather_code);
+
+  const current: CurrentWeather = {
+    city,
+    region,
+    date: formatToday(),
+    tempF: Math.round(payload.current.temperature_2m),
+    condition: currentDescription.condition,
+    conditionLabel: currentDescription.label,
+    windMph: Math.round(payload.current.wind_speed_10m),
+  };
+
+  const forecast: DayForecast[] = payload.daily.time.map((iso, index) => ({
+    id: iso,
+    label: WEEKDAY_FORMAT.format(new Date(iso)),
+    condition: describeWeather(payload.daily.weather_code[index]).condition,
+    highF: Math.round(payload.daily.temperature_2m_max[index]),
+  }));
+
+  return { current, forecast };
+}
 
 /**
  * Resolve a city name to live current conditions + a 5-day forecast.
@@ -164,42 +230,29 @@ export async function getWeather(city: string): Promise<WeatherResult> {
     return { status: "not-found", city };
   }
 
-  const params = new URLSearchParams({
-    latitude: String(place.latitude),
-    longitude: String(place.longitude),
-    current: "temperature_2m,weather_code,wind_speed_10m",
-    daily: "weather_code,temperature_2m_max",
-    temperature_unit: "fahrenheit",
-    wind_speed_unit: "mph",
-    timezone: "auto",
-    forecast_days: "5",
-  });
-  const forecastRes = await fetch(`${FORECAST_URL}?${params.toString()}`, {
-    next: { revalidate: 900 },
-  });
-  if (!forecastRes.ok) {
-    throw new Error(`Forecast request failed (${forecastRes.status})`);
-  }
+  const payload = await fetchForecast(place.latitude, place.longitude);
+  const region = place.admin1 ?? place.country_code ?? "";
 
-  const payload: ForecastResponse = await forecastRes.json();
-  const currentDescription = describeWeather(payload.current.weather_code);
-
-  const current: CurrentWeather = {
-    city: place.name,
-    region: place.admin1 ?? place.country_code ?? "",
-    date: formatToday(),
-    tempF: Math.round(payload.current.temperature_2m),
-    condition: currentDescription.condition,
-    conditionLabel: currentDescription.label,
-    windMph: Math.round(payload.current.wind_speed_10m),
+  return {
+    status: "ok",
+    data: buildWeatherData(payload, place.name, region),
   };
+}
 
-  const forecast: DayForecast[] = payload.daily.time.map((iso, index) => ({
-    id: iso,
-    label: WEEKDAY_FORMAT.format(new Date(iso)),
-    condition: describeWeather(payload.daily.weather_code[index]).condition,
-    highF: Math.round(payload.daily.temperature_2m_max[index]),
-  }));
+/**
+ * Resolve raw coordinates (from the browser Geolocation API) to live weather.
+ * Because coordinates are always valid, this never returns "not-found"; only
+ * network/upstream failures throw. The city label is approximated from the
+ * forecast's reported time zone since Open-Meteo has no reverse geocoder.
+ */
+export async function getWeatherByCoords(
+  latitude: number,
+  longitude: number,
+): Promise<WeatherResult> {
+  const payload = await fetchForecast(latitude, longitude);
 
-  return { status: "ok", data: { current, forecast } };
+  return {
+    status: "ok",
+    data: buildWeatherData(payload, cityFromTimezone(payload.timezone), ""),
+  };
 }
