@@ -39,17 +39,32 @@ interface GeocodingResponse {
   results?: GeocodingResult[];
 }
 
+/**
+ * Current conditions block. Mirrors the raw Open-Meteo JSON field names;
+ * only the fields the app consumes are typed.
+ * Source: current=temperature_2m,weather_code,wind_speed_10m
+ */
+interface CurrentConditions {
+  temperature_2m: number;
+  weather_code: number;
+  wind_speed_10m: number;
+}
+
+/**
+ * Daily forecast block. Open-Meteo returns parallel arrays indexed by day
+ * (index 0 = today), so `time[i]`, `weather_code[i]`, and
+ * `temperature_2m_max[i]` describe the same day.
+ * Source: daily=weather_code,temperature_2m_max (plus the `time` axis)
+ */
+interface DailyForecast {
+  time: string[];
+  weather_code: number[];
+  temperature_2m_max: number[];
+}
+
 interface ForecastResponse {
-  current: {
-    temperature_2m: number;
-    weather_code: number;
-    wind_speed_10m: number;
-  };
-  daily: {
-    time: string[];
-    weather_code: number[];
-    temperature_2m_max: number[];
-  };
+  current: CurrentConditions;
+  daily: DailyForecast;
 }
 
 const GEOCODING_URL = "https://geocoding-api.open-meteo.com/v1/search";
