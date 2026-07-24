@@ -10,6 +10,8 @@ const config: Config = {
   coverageProvider: "v8",
   testEnvironment: "jsdom",
   setupFilesAfterEnv: ["<rootDir>/jest.setup.ts"],
+  // Playwright specs in tests/ are run by Playwright, not Jest.
+  testPathIgnorePatterns: ["<rootDir>/node_modules/", "<rootDir>/tests/"],
   // Mirror the tsconfig "@/*" path alias so tests can use it too.
   moduleNameMapper: {
     "^@/(.*)$": "<rootDir>/$1",
