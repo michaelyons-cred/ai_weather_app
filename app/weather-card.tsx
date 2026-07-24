@@ -95,14 +95,14 @@ function UnitToggle({ unit, onToggle }: { unit: Unit; onToggle: () => void }) {
           unit === "C" ? "text-toggle" : "text-white"
         }`}
       >
-        C
+        C&deg;
       </span>
       <span
         className={`relative z-10 flex-1 text-center ${
           unit === "F" ? "text-toggle" : "text-white"
         }`}
       >
-        F
+        F&deg;
       </span>
       <span
         className={`absolute top-1/2 h-5 w-5 -translate-y-1/2 rounded-full bg-white transition-all ${
