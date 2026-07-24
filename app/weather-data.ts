@@ -69,8 +69,23 @@ interface ForecastResponse {
   timezone: string;
 }
 
+/**
+ * Subset of BigDataCloud's reverse-geocode response we consume.
+ * Source: /data/reverse-geocode-client
+ */
+interface ReverseGeocodeResponse {
+  city?: string;
+  locality?: string;
+  principalSubdivision?: string;
+  /** e.g. "US-CO" for Colorado. */
+  principalSubdivisionCode?: string;
+  countryCode?: string;
+}
+
 const GEOCODING_URL = "https://geocoding-api.open-meteo.com/v1/search";
 const FORECAST_URL = "https://api.open-meteo.com/v1/forecast";
+const REVERSE_GEOCODE_URL =
+  "https://api.bigdatacloud.net/data/reverse-geocode-client";
 
 /* ------------------------------------------------------------------ */
 /* Mapping helpers                                                     */
@@ -183,6 +198,46 @@ async function fetchForecast(
   return res.json();
 }
 
+/**
+ * Reverse-geocode coordinates to a "City, ST" label using BigDataCloud's free,
+ * key-less endpoint (Open-Meteo's geocoder is forward-only). Returns null on
+ * any failure so the caller can fall back to the time-zone label without
+ * breaking the weather fetch. Results are effectively static per coordinate,
+ * so they are cached for a day.
+ */
+async function reverseGeocode(
+  latitude: number,
+  longitude: number,
+): Promise<{ city: string; region: string } | null> {
+  const params = new URLSearchParams({
+    latitude: String(latitude),
+    longitude: String(longitude),
+    localityLanguage: "en",
+  });
+  try {
+    const res = await fetch(`${REVERSE_GEOCODE_URL}?${params.toString()}`, {
+      next: { revalidate: 86400 },
+    });
+    if (!res.ok) {
+      return null;
+    }
+    const data: ReverseGeocodeResponse = await res.json();
+    const city = data.city || data.locality;
+    if (!city) {
+      return null;
+    }
+    // "US-CO" -> "CO"; falls back to the full subdivision or country code.
+    const region =
+      data.principalSubdivisionCode?.split("-").at(-1) ||
+      data.principalSubdivision ||
+      data.countryCode ||
+      "";
+    return { city, region };
+  } catch {
+    return null;
+  }
+}
+
 /** Shape a raw forecast payload into the app's canonical WeatherData. */
 function buildWeatherData(
   payload: ForecastResponse,
@@ -242,17 +297,23 @@ export async function getWeather(city: string): Promise<WeatherResult> {
 /**
  * Resolve raw coordinates (from the browser Geolocation API) to live weather.
  * Because coordinates are always valid, this never returns "not-found"; only
- * network/upstream failures throw. The city label is approximated from the
- * forecast's reported time zone since Open-Meteo has no reverse geocoder.
+ * the forecast fetch can throw. The "City, ST" label comes from reverse
+ * geocoding, falling back to the forecast's time zone if that lookup fails.
  */
 export async function getWeatherByCoords(
   latitude: number,
   longitude: number,
 ): Promise<WeatherResult> {
-  const payload = await fetchForecast(latitude, longitude);
+  const [payload, place] = await Promise.all([
+    fetchForecast(latitude, longitude),
+    reverseGeocode(latitude, longitude),
+  ]);
+
+  const city = place?.city ?? cityFromTimezone(payload.timezone);
+  const region = place?.region ?? "";
 
   return {
     status: "ok",
-    data: buildWeatherData(payload, cityFromTimezone(payload.timezone), ""),
+    data: buildWeatherData(payload, city, region),
   };
 }
