@@ -1,5 +1,5 @@
 const PAGE_SHELL =
-  "bg-weather-gradient font-sans flex min-h-screen w-full items-center justify-center overflow-x-hidden px-4 py-10";
+  "bg-weather-gradient font-sans flex min-h-screen w-full items-center justify-center overflow-x-hidden px-0 py-6 sm:px-4 sm:py-10";
 
 /**
  * Skeleton shown while the Server Component fetches live weather. It mirrors

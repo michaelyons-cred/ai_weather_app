@@ -117,7 +117,7 @@ function UnitToggle({ unit, onToggle }: { unit: Unit; onToggle: () => void }) {
       </span>
       <span
         className={`absolute top-1/2 h-5 w-5 -translate-y-1/2 rounded-full bg-white transition-all ${
-          unit === "F" ? "right-0.5" : "left-0.5"
+          unit === "F" ? "right-1" : "left-1"
         }`}
       />
     </button>
@@ -133,7 +133,7 @@ function CurrentConditions({
 }) {
   return (
     <div className="text-sky-accent absolute top-4 left-5 z-10 flex items-start gap-2 sm:top-5 sm:left-7">
-      <span className="text-4xl leading-none sm:text-5xl">
+      <span className="text-3xl leading-none sm:text-4xl md:text-5xl">
         {displayTemp(current.tempF, unit)}&deg;
       </span>
       {/* Icon is decorative here: the condition is already stated in the text beside it */}
@@ -167,7 +167,7 @@ function ForecastDay({
     >
       <span className="text-sm font-bold">{day.label}</span>
       <WeatherIcon condition={day.condition} className="h-9 w-auto" />
-      <span className="text-2xl">
+      <span className="text-lg sm:text-xl md:text-2xl">
         {displayTemp(day.highF, unit)}&deg;
       </span>
     </div>
@@ -243,7 +243,7 @@ export function WeatherCard({
         width={145}
         height={83}
         unoptimized
-        className="pointer-events-none absolute top-[46%] -left-8 z-10 w-24 rotate-6 sm:-left-12 sm:w-36"
+        className="pointer-events-none absolute top-[46%] -left-8 z-10 hidden w-24 rotate-6 sm:-left-12 sm:block sm:w-36"
       />
       <Image
         src="/weather/cloud-right.svg"
@@ -252,7 +252,7 @@ export function WeatherCard({
         width={207}
         height={113}
         unoptimized
-        className="pointer-events-none absolute top-[30%] -right-8 z-10 w-32 sm:-right-12 sm:w-52"
+        className="pointer-events-none absolute top-[30%] -right-8 z-10 hidden w-32 sm:-right-12 sm:block sm:w-52"
       />
     </div>
   );
