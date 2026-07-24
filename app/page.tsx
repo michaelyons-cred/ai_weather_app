@@ -1,31 +1,9 @@
 import Image from "next/image";
-import {
-  WeatherCard,
-  type CurrentWeather,
-  type DayForecast,
-} from "./weather-card";
+import { WeatherCard } from "./weather-card";
+import { getWeather } from "./weather-data";
 
-/* ------------------------------------------------------------------ */
-/* Static data (canonical unit is Fahrenheit)                          */
-/* ------------------------------------------------------------------ */
-
-const CURRENT: CurrentWeather = {
-  city: "Dallas",
-  region: "TX",
-  date: "Saturday, Sep 16, 2018",
-  tempF: 93,
-  condition: "cloud-sun",
-  conditionLabel: "Partly Cloudy",
-  windMph: 12,
-};
-
-const FORECAST: DayForecast[] = [
-  { id: "sun", label: "Sun", condition: "drizzle-sun", highF: 92 },
-  { id: "mon", label: "Mon", condition: "lightning", highF: 87 },
-  { id: "tue", label: "Tue", condition: "cloud-sun", highF: 93 },
-  { id: "wed", label: "Wed", condition: "cloud-sun", highF: 95 },
-  { id: "thu", label: "Thu", condition: "drizzle-alt", highF: 88 },
-];
+const PAGE_SHELL =
+  "bg-weather-gradient font-sans flex min-h-screen w-full items-center justify-center overflow-x-hidden px-4 py-10";
 
 /* ------------------------------------------------------------------ */
 /* Server-rendered shell                                               */
@@ -57,12 +35,36 @@ function Header({ city, region, date }: { city: string; region: string; date: st
 /* Page                                                                */
 /* ------------------------------------------------------------------ */
 
-export default function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ city?: string }>;
+}) {
+  const { city = "Dallas" } = await searchParams;
+  const result = await getWeather(city);
+
+  if (result.status === "not-found") {
+    return (
+      <main className={PAGE_SHELL}>
+        <div className="w-full max-w-[672px] rounded-[3px] bg-white px-6 py-12 text-center shadow-[0_0_15px_0_rgba(0,0,0,0.2)]">
+          <h1 className="text-forecast-text text-lg font-semibold">
+            No weather found for &ldquo;{result.city}&rdquo;
+          </h1>
+          <p className="text-forecast-text/70 mt-2 text-sm">
+            Check the spelling or try a nearby city.
+          </p>
+        </div>
+      </main>
+    );
+  }
+
+  const { current, forecast } = result.data;
+
   return (
-    <main className="bg-weather-gradient font-sans flex min-h-screen w-full items-center justify-center overflow-x-hidden px-4 py-10">
+    <main className={PAGE_SHELL}>
       <div className="w-full max-w-[672px]">
-        <Header city={CURRENT.city} region={CURRENT.region} date={CURRENT.date} />
-        <WeatherCard current={CURRENT} forecast={FORECAST} />
+        <Header city={current.city} region={current.region} date={current.date} />
+        <WeatherCard current={current} forecast={forecast} />
       </div>
     </main>
   );
