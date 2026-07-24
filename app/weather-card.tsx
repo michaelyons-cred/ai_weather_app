@@ -2,12 +2,13 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import { displayTemp, type Unit } from "./temperature";
 
 /* ------------------------------------------------------------------ */
 /* Data model                                                          */
 /* ------------------------------------------------------------------ */
 
-export type Unit = "C" | "F";
+export type { Unit };
 
 export type WeatherCondition =
   | "cloud-sun"
@@ -51,18 +52,6 @@ const CONDITION_LABELS: Record<WeatherCondition, string> = {
   "drizzle-alt": "Light rain",
   "drizzle-sun": "Sun and drizzle",
 };
-
-/* ------------------------------------------------------------------ */
-/* Temperature helpers (canonical unit is Fahrenheit)                  */
-/* ------------------------------------------------------------------ */
-
-function toCelsius(fahrenheit: number): number {
-  return Math.round(((fahrenheit - 32) * 5) / 9);
-}
-
-function displayTemp(fahrenheit: number, unit: Unit): number {
-  return unit === "F" ? fahrenheit : toCelsius(fahrenheit);
-}
 
 /* ------------------------------------------------------------------ */
 /* Presentational components                                           */
