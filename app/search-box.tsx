@@ -179,15 +179,15 @@ export function SearchBox() {
   return (
     <div ref={containerRef} className="relative w-full max-w-[360px]">
       <div className="relative">
-        <span className="pointer-events-none absolute inset-y-0 left-3 flex items-center text-white/70">
+        <span className="pointer-events-none absolute inset-y-0 left-3.5 flex items-center text-white">
           {loading || isNavigating ? (
             <svg
               aria-hidden
               viewBox="0 0 24 24"
-              className="h-4 w-4 animate-spin"
+              className="h-[18px] w-[18px] animate-spin"
               fill="none"
               stroke="currentColor"
-              strokeWidth={2}
+              strokeWidth={2.25}
             >
               <circle cx="12" cy="12" r="9" className="opacity-25" />
               <path d="M21 12a9 9 0 0 0-9-9" strokeLinecap="round" />
@@ -196,10 +196,10 @@ export function SearchBox() {
             <svg
               aria-hidden
               viewBox="0 0 24 24"
-              className="h-4 w-4"
+              className="h-[18px] w-[18px]"
               fill="none"
               stroke="currentColor"
-              strokeWidth={2}
+              strokeWidth={2.25}
               strokeLinecap="round"
               strokeLinejoin="round"
             >
